@@ -39,3 +39,16 @@ index 0477bfe30..c266c8c4e 100644
  
    // Grayscale output
    if (flags & FPDF_GRAYSCALE)
+diff --git a/public/fpdfview.h b/public/fpdfview.h
+index e3cda006d..09387313c 100644
+--- a/public/fpdfview.h
++++ b/public/fpdfview.h
+@@ -812,6 +812,8 @@ FPDF_EXPORT int FPDF_CALLCONV FPDF_GetPageSizeByIndex(FPDF_DOCUMENT document,
+ #define FPDF_RENDER_NO_SMOOTHIMAGE 0x2000
+ // Set to disable anti-aliasing on paths.
+ #define FPDF_RENDER_NO_SMOOTHPATH 0x4000
++// Set to skip text rendering.
++#define FPDF_SKIP_TEXT_RENDERING 0x8000
+ // Set whether to render in a reverse Byte order, this flag is only used when
+ // rendering to a bitmap.
+ #define FPDF_REVERSE_BYTE_ORDER 0x10
