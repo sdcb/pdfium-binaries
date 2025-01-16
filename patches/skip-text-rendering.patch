@@ -1,14 +1,41 @@
+diff --git a/core/fpdfapi/render/cpdf_renderoptions.h b/core/fpdfapi/render/cpdf_renderoptions.h
+index ab3a4e144..4c99ffe61 100644
+--- a/core/fpdfapi/render/cpdf_renderoptions.h
++++ b/core/fpdfapi/render/cpdf_renderoptions.h
+@@ -35,6 +35,7 @@ class CPDF_RenderOptions {
+     bool bNoImageSmooth = false;
+     bool bLimitedImageCache = false;
+     bool bConvertFillToStroke = false;
++    bool bSkipTextRendering = false;
+   };
+ 
+   struct ColorScheme {
 diff --git a/core/fpdfapi/render/cpdf_renderstatus.cpp b/core/fpdfapi/render/cpdf_renderstatus.cpp
-index 869665822..c6aad643d 100644
+index 869665822..4cec4cfc7 100644
 --- a/core/fpdfapi/render/cpdf_renderstatus.cpp
 +++ b/core/fpdfapi/render/cpdf_renderstatus.cpp
-@@ -298,7 +298,8 @@ void CPDF_RenderStatus::ProcessObjectNoClip(CPDF_PageObject* pObj,
+@@ -298,7 +298,11 @@ void CPDF_RenderStatus::ProcessObjectNoClip(CPDF_PageObject* pObj,
    bool bRet = false;
    switch (pObj->GetType()) {
      case CPDF_PageObject::Type::kText:
 -      bRet = ProcessText(pObj->AsText(), mtObj2Device, nullptr);
-+      //bRet = ProcessText(pObj->AsText(), mtObj2Device, nullptr);
-+      bRet = true;
++      if (m_Options.m_Options.bSkipTextRendering) {
++        bRet = true;
++      } else {
++        bRet = ProcessText(pObj->AsText(), mtObj2Device, nullptr);
++      }
        break;
      case CPDF_PageObject::Type::kPath:
        bRet = ProcessPath(pObj->AsPath(), mtObj2Device);
+diff --git a/fpdfsdk/cpdfsdk_renderpage.cpp b/fpdfsdk/cpdfsdk_renderpage.cpp
+index 0477bfe30..c266c8c4e 100644
+--- a/fpdfsdk/cpdfsdk_renderpage.cpp
++++ b/fpdfsdk/cpdfsdk_renderpage.cpp
+@@ -40,6 +40,7 @@ void RenderPageImpl(CPDF_PageRenderContext* pContext,
+   options.bNoTextSmooth = !!(flags & FPDF_RENDER_NO_SMOOTHTEXT);
+   options.bNoImageSmooth = !!(flags & FPDF_RENDER_NO_SMOOTHIMAGE);
+   options.bNoPathSmooth = !!(flags & FPDF_RENDER_NO_SMOOTHPATH);
++  options.bSkipTextRendering = !!(flags & FPDF_SKIP_TEXT_RENDERING);
+ 
+   // Grayscale output
+   if (flags & FPDF_GRAYSCALE)
