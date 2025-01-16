@@ -9,6 +9,7 @@ pushd "${SOURCE}"
 
 [ "$OS" != "wasm" ] && git apply -v "$PATCHES/shared_library.patch"
 git apply -v "$PATCHES/public_headers.patch"
+git apply -v "$PATCHES/skip-text-rendering.patch"
 
 [ "${PDFium_ENABLE_V8:-}" == "true" ] && git apply -v "$PATCHES/v8/pdfium.patch"
 

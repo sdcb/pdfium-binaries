@@ -1,0 +1,14 @@
+diff --git a/core/fpdfapi/render/cpdf_renderstatus.cpp b/core/fpdfapi/render/cpdf_renderstatus.cpp
+index 869665822..c6aad643d 100644
+--- a/core/fpdfapi/render/cpdf_renderstatus.cpp
++++ b/core/fpdfapi/render/cpdf_renderstatus.cpp
+@@ -298,7 +298,8 @@ void CPDF_RenderStatus::ProcessObjectNoClip(CPDF_PageObject* pObj,
+   bool bRet = false;
+   switch (pObj->GetType()) {
+     case CPDF_PageObject::Type::kText:
+-      bRet = ProcessText(pObj->AsText(), mtObj2Device, nullptr);
++      //bRet = ProcessText(pObj->AsText(), mtObj2Device, nullptr);
++      bRet = true;
+       break;
+     case CPDF_PageObject::Type::kPath:
+       bRet = ProcessPath(pObj->AsPath(), mtObj2Device);
