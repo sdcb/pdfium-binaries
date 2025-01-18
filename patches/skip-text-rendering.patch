@@ -15,7 +15,7 @@ index ab3a4e144..727ab35e2 100644
  
    struct ColorScheme {
 diff --git a/core/fpdfapi/render/cpdf_renderstatus.cpp b/core/fpdfapi/render/cpdf_renderstatus.cpp
-index 869665822..413696e67 100644
+index 869665822..e01f540c2 100644
 --- a/core/fpdfapi/render/cpdf_renderstatus.cpp
 +++ b/core/fpdfapi/render/cpdf_renderstatus.cpp
 @@ -298,19 +298,39 @@ void CPDF_RenderStatus::ProcessObjectNoClip(CPDF_PageObject* pObj,
@@ -31,7 +31,7 @@ index 869665822..413696e67 100644
        break;
      case CPDF_PageObject::Type::kPath:
 -      bRet = ProcessPath(pObj->AsPath(), mtObj2Device);
-+      if (m_Options.GetOptions().bDisablePathRendering) {
++      if (m_Options.GetOptions().bSkipPathRendering) {
 +        bRet = true;
 +      } else {
 +        bRet = ProcessPath(pObj->AsPath(), mtObj2Device);
