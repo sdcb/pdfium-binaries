@@ -1,20 +1,24 @@
 diff --git a/core/fpdfapi/render/cpdf_renderoptions.h b/core/fpdfapi/render/cpdf_renderoptions.h
-index ab3a4e144..4c99ffe61 100644
+index ab3a4e144..727ab35e2 100644
 --- a/core/fpdfapi/render/cpdf_renderoptions.h
 +++ b/core/fpdfapi/render/cpdf_renderoptions.h
-@@ -35,6 +35,7 @@ class CPDF_RenderOptions {
+@@ -35,6 +35,11 @@ class CPDF_RenderOptions {
      bool bNoImageSmooth = false;
      bool bLimitedImageCache = false;
      bool bConvertFillToStroke = false;
 +    bool bSkipTextRendering = false;
++    bool bSkipPathRendering = false;
++    bool bSkipImageRendering = false;
++    bool bSkipShadingRendering = false;
++    bool bSkipFormRendering = false;
    };
  
    struct ColorScheme {
 diff --git a/core/fpdfapi/render/cpdf_renderstatus.cpp b/core/fpdfapi/render/cpdf_renderstatus.cpp
-index 869665822..5416e3a30 100644
+index 869665822..413696e67 100644
 --- a/core/fpdfapi/render/cpdf_renderstatus.cpp
 +++ b/core/fpdfapi/render/cpdf_renderstatus.cpp
-@@ -298,7 +298,11 @@ void CPDF_RenderStatus::ProcessObjectNoClip(CPDF_PageObject* pObj,
+@@ -298,19 +298,39 @@ void CPDF_RenderStatus::ProcessObjectNoClip(CPDF_PageObject* pObj,
    bool bRet = false;
    switch (pObj->GetType()) {
      case CPDF_PageObject::Type::kText:
@@ -26,29 +30,73 @@ index 869665822..5416e3a30 100644
 +      }
        break;
      case CPDF_PageObject::Type::kPath:
-       bRet = ProcessPath(pObj->AsPath(), mtObj2Device);
+-      bRet = ProcessPath(pObj->AsPath(), mtObj2Device);
++      if (m_Options.GetOptions().bDisablePathRendering) {
++        bRet = true;
++      } else {
++        bRet = ProcessPath(pObj->AsPath(), mtObj2Device);
++      }
+       break;
+     case CPDF_PageObject::Type::kImage:
+-      bRet = ProcessImage(pObj->AsImage(), mtObj2Device);
++      if (m_Options.GetOptions().bSkipImageRendering) {
++        bRet = true;
++      } else {
++        bRet = ProcessImage(pObj->AsImage(), mtObj2Device);
++      }
+       break;
+     case CPDF_PageObject::Type::kShading:
+-      ProcessShading(pObj->AsShading(), mtObj2Device);
++      if (m_Options.GetOptions().bSkipShadingRendering) {
++        bRet = true;
++      } else {
++        ProcessShading(pObj->AsShading(), mtObj2Device);
++      }
+       return;
+     case CPDF_PageObject::Type::kForm:
+-      bRet = ProcessForm(pObj->AsForm(), mtObj2Device);
++      if (m_Options.GetOptions().bSkipFormRendering) {
++        bRet = true;
++      } else {
++        bRet = ProcessForm(pObj->AsForm(), mtObj2Device);
++      }
+       break;
+   }
+   if (!bRet)
 diff --git a/fpdfsdk/cpdfsdk_renderpage.cpp b/fpdfsdk/cpdfsdk_renderpage.cpp
-index 0477bfe30..c266c8c4e 100644
+index 0477bfe30..4f017c91b 100644
 --- a/fpdfsdk/cpdfsdk_renderpage.cpp
 +++ b/fpdfsdk/cpdfsdk_renderpage.cpp
-@@ -40,6 +40,7 @@ void RenderPageImpl(CPDF_PageRenderContext* pContext,
+@@ -40,6 +40,11 @@ void RenderPageImpl(CPDF_PageRenderContext* pContext,
    options.bNoTextSmooth = !!(flags & FPDF_RENDER_NO_SMOOTHTEXT);
    options.bNoImageSmooth = !!(flags & FPDF_RENDER_NO_SMOOTHIMAGE);
    options.bNoPathSmooth = !!(flags & FPDF_RENDER_NO_SMOOTHPATH);
 +  options.bSkipTextRendering = !!(flags & FPDF_SKIP_TEXT_RENDERING);
++  options.bSkipPathRendering = !!(flags & FPDF_SKIP_PATH_RENDERING);
++  options.bSkipImageRendering = !!(flags & FPDF_SKIP_IMAGE_RENDERING);
++  options.bSkipShadingRendering = !!(flags & FPDF_SKIP_SHADING_RENDERING);
++  options.bSkipFormRendering = !!(flags & FPDF_SKIP_FORM_RENDERING);
  
    // Grayscale output
    if (flags & FPDF_GRAYSCALE)
 diff --git a/public/fpdfview.h b/public/fpdfview.h
-index e3cda006d..09387313c 100644
+index e3cda006d..c4fd3781e 100644
 --- a/public/fpdfview.h
 +++ b/public/fpdfview.h
-@@ -812,6 +812,8 @@ FPDF_EXPORT int FPDF_CALLCONV FPDF_GetPageSizeByIndex(FPDF_DOCUMENT document,
+@@ -812,6 +812,16 @@ FPDF_EXPORT int FPDF_CALLCONV FPDF_GetPageSizeByIndex(FPDF_DOCUMENT document,
  #define FPDF_RENDER_NO_SMOOTHIMAGE 0x2000
  // Set to disable anti-aliasing on paths.
  #define FPDF_RENDER_NO_SMOOTHPATH 0x4000
 +// Set to skip text rendering.
 +#define FPDF_SKIP_TEXT_RENDERING 0x8000
++// Set to skip path rendering.
++#define FPDF_SKIP_PATH_RENDERING 0x10000
++// Set to skip image rendering.
++#define FPDF_SKIP_IMAGE_RENDERING 0x20000
++// Set to skip shading rendering.
++#define FPDF_SKIP_SHADING_RENDERING 0x40000
++// Set to skip form rendering.
++#define FPDF_SKIP_FORM_RENDERING 0x80000
  // Set whether to render in a reverse Byte order, this flag is only used when
  // rendering to a bitmap.
  #define FPDF_REVERSE_BYTE_ORDER 0x10
